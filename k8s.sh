@@ -29,6 +29,16 @@ function delete_prometheus_spillsovers() {
     kubectl delete crd alertmanagers.monitoring.coreos.com
 }
 
+function create_rolebindings() {
+    if ! kubectl get rolebindings default:service-discovery-client; 
+    then
+        echo "Creating rolebinding for service discovery..."
+        kubectl create rolebinding default:service-discovery-client \
+                     --clusterrole service-discovery-client \
+                     --serviceaccount k8s-disco:default
+    fi
+}
+
 function start_cluster() {
     cd ${BASEDIR}/charts
     helm install --name ${CHARTNAME} ${CHARTNAME}
@@ -70,6 +80,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 if [[ ${START} == "yes" ]]; then
     add_repos
     echo "Starting cluster..."
+    create_rolebindings
     update_helm_dependecies
     start_cluster
 fi
